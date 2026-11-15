@@ -1,0 +1,22 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- 浅色主题 -->
+    <SolidColorBrush x:Key="AppBackgroundBrush" Color="#F4F6FA"/>
+    <SolidColorBrush x:Key="CardBackgroundBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#1F2430"/>
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#8A93A6"/>
+    <SolidColorBrush x:Key="BorderBrush" Color="#E2E6EF"/>
+    <SolidColorBrush x:Key="HoverBrush" Color="#EEF1F8"/>
+    <SolidColorBrush x:Key="SelectionBrush" Color="#D6E4FF"/>
+    <SolidColorBrush x:Key="ButtonNormalBrush" Color="#E3E7EF"/>
+    <SolidColorBrush x:Key="ButtonNormalTextBrush" Color="#3A4254"/>
+    <SolidColorBrush x:Key="DisabledTextBrush" Color="#A9B1BF"/>
+
+    <!-- 状态色：浅蓝 / 蓝 / 浅绿 -->
+    <SolidColorBrush x:Key="StateBelowNormalBrush" Color="#7CC9F8"/>
+    <SolidColorBrush x:Key="StateBelowNormalTextBrush" Color="#0B2A47"/>
+    <SolidColorBrush x:Key="StateTrimmedBrush" Color="#2E8BF0"/>
+    <SolidColorBrush x:Key="StateTrimmedTextBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="StateFrozenBrush" Color="#8FE0A0"/>
+    <SolidColorBrush x:Key="StateFrozenTextBrush" Color="#0B3B1E"/>
+</ResourceDictionary>

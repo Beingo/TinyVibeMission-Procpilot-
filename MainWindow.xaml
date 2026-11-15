@@ -1,0 +1,137 @@
+<Window x:Class="ProcPilot.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="ProcPilot — 进程管理器"
+        Height="680" Width="1040"
+        MinHeight="400" MinWidth="680"
+        WindowStartupLocation="CenterScreen"
+        FontFamily="{DynamicResource AppFont}"
+        Background="{DynamicResource AppBackgroundBrush}">
+    <Grid Margin="18,14,18,14">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 顶部标题区 -->
+        <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="2,0,0,10">
+            <TextBlock Text="ProcPilot" FontSize="20" FontWeight="SemiBold"
+                       Foreground="{DynamicResource TextPrimaryBrush}" VerticalAlignment="Center"/>
+            <TextBlock x:Name="StatusText" Margin="16,3,0,0" VerticalAlignment="Center"
+                       FontSize="12" Foreground="{DynamicResource TextSecondaryBrush}" Text="正在采样…"/>
+        </StackPanel>
+
+        <!-- 工具栏：状态切换按钮（点击即对选中进程生效，高亮指示选中进程状态） -->
+        <Grid Grid.Row="1" Margin="2,0,0,12">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0" Orientation="Horizontal">
+                <Button x:Name="BtnBelowNormal" Content="低于正常" Width="120"
+                        Margin="0,0,8,0" Click="OnStateButtonClick" Tag="BelowNormal"
+                        Style="{StaticResource StateButtonStyle}"
+                        Background="{DynamicResource StateBelowNormalBrush}"
+                        Foreground="{DynamicResource StateBelowNormalTextBrush}"/>
+                <Button x:Name="BtnTrimmed" Content="低于正常 · 虚拟内存" Width="150"
+                        Margin="0,0,8,0" Click="OnStateButtonClick" Tag="BelowNormalTrimmed"
+                        Style="{StaticResource StateButtonStyle}"
+                        Background="{DynamicResource StateTrimmedBrush}"
+                        Foreground="{DynamicResource StateTrimmedTextBrush}"/>
+                <Button x:Name="BtnFrozen" Content="冻结" Width="100"
+                        Margin="0,0,8,0" Click="OnStateButtonClick" Tag="Frozen"
+                        Style="{StaticResource StateButtonStyle}"
+                        Background="{DynamicResource StateFrozenBrush}"
+                        Foreground="{DynamicResource StateFrozenTextBrush}"/>
+                <Button x:Name="BtnNormal" Content="恢复正常" Width="110"
+                        Click="OnStateButtonClick" Tag="Normal"
+                        Style="{StaticResource StateButtonStyle}"
+                        Background="{DynamicResource ButtonNormalBrush}"
+                        Foreground="{DynamicResource ButtonNormalTextBrush}"/>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                <Button x:Name="BtnRemember" Content="记住 → 自动化" Width="128" Height="34"
+                        Margin="0,0,8,0" Click="OnRememberButtonClick" Tag="Remember"
+                        Style="{StaticResource StateButtonStyle}"
+                        Background="{DynamicResource ButtonNormalBrush}"
+                        Foreground="{DynamicResource ButtonNormalTextBrush}"
+                        ToolTip="把选中进程当前的状态记为规则：该进程以后每次启动都会自动应用"/>
+                <Button x:Name="BtnSettings" Content="设置" Width="80" Height="34"
+                        Margin="0,0,8,0" Click="OnSettingsButtonClick" Tag="Settings"
+                        Style="{StaticResource StateButtonStyle}"
+                        Background="{DynamicResource ButtonNormalBrush}"
+                        Foreground="{DynamicResource ButtonNormalTextBrush}"/>
+                <Button x:Name="BtnAbout" Content="关于" Width="80" Height="34"
+                        Click="OnAboutButtonClick" Tag="About"
+                        Style="{StaticResource StateButtonStyle}"
+                        Background="{DynamicResource ButtonNormalBrush}"
+                        Foreground="{DynamicResource ButtonNormalTextBrush}"/>
+            </StackPanel>
+        </Grid>
+
+        <!-- 进程列表 -->
+        <Border Grid.Row="2" CornerRadius="8" Background="{DynamicResource CardBackgroundBrush}"
+                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+            <ListView x:Name="ProcessList"
+                      Background="Transparent" BorderThickness="0"
+                      SelectionMode="Single"
+                      SelectionChanged="OnSelectionChanged"
+                      ContextMenuOpening="OnListContextMenuOpening"
+                      ScrollViewer.CanContentScroll="True"
+                      VirtualizingPanel.IsVirtualizing="True"
+                      VirtualizingPanel.VirtualizationMode="Recycling"
+                      VirtualizingPanel.ScrollUnit="Pixel"
+                      VirtualizingPanel.CacheLength="2">
+                <ListView.ItemContainerStyle>
+                    <Style TargetType="ListViewItem" BasedOn="{StaticResource ProcessRowStyle}">
+                        <Setter Property="Background" Value="{Binding StateBrush}"/>
+                        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}"/>
+                        <Setter Property="IsEnabled" Value="{Binding IsEligible}"/>
+                        <Style.Triggers>
+                            <Trigger Property="IsSelected" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource SelectionBrush}"/>
+                            </Trigger>
+                            <!-- 低占用（不可操作）进程：灰色显示 -->
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Foreground" Value="{DynamicResource DisabledTextBrush}"/>
+                                <Setter Property="Opacity" Value="0.6"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </ListView.ItemContainerStyle>
+                <ListView.ContextMenu>
+                    <ContextMenu>
+                        <MenuItem x:Name="MenuBelowNormal" Header="低于正常" Tag="BelowNormal" Click="OnMenuStateClick"/>
+                        <MenuItem x:Name="MenuTrimmed" Header="低于正常 · 移入虚拟内存" Tag="BelowNormalTrimmed" Click="OnMenuStateClick"/>
+                        <MenuItem x:Name="MenuFrozen" Header="冻结" Tag="Frozen" Click="OnMenuStateClick"/>
+                        <Separator/>
+                        <MenuItem x:Name="MenuNormal" Header="恢复正常" Tag="Normal" Click="OnMenuStateClick"/>
+                        <Separator/>
+                        <MenuItem x:Name="MenuRemember" Header="记住此进程设定（下次启动自动应用）" Click="OnMenuRememberClick"/>
+                        <MenuItem x:Name="MenuForget" Header="忘记此进程设定" Click="OnMenuForgetClick"/>
+                        <Separator/>
+                        <MenuItem x:Name="MenuSettings" Header="设置…" Click="OnMenuSettingsClick"/>
+                        <MenuItem x:Name="MenuAbout" Header="关于 ProcPilot…" Click="OnAboutMenuClick"/>
+                    </ContextMenu>
+                </ListView.ContextMenu>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="进程" Width="270" DisplayMemberBinding="{Binding DisplayName}"/>
+                        <GridViewColumn Header="PID" Width="70" DisplayMemberBinding="{Binding Pid}"/>
+                        <GridViewColumn Header="CPU" Width="70" DisplayMemberBinding="{Binding CpuText}"/>
+                        <GridViewColumn Header="内存" Width="100" DisplayMemberBinding="{Binding MemoryText}"/>
+                        <GridViewColumn Header="状态" Width="140" DisplayMemberBinding="{Binding StateText}"/>
+                        <GridViewColumn Header="自动" Width="120" DisplayMemberBinding="{Binding AutoText}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Border>
+
+        <!-- 底部提示条：事件源 / 规则数 / 采样开销 -->
+        <TextBlock x:Name="FooterText" Grid.Row="3" Margin="4,8,4,0" FontSize="11"
+                   Foreground="{DynamicResource TextSecondaryBrush}"
+                   Text="准备就绪"/>
+    </Grid>
+</Window>

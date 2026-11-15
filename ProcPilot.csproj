@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseWPF>true</UseWPF>
+    <UseWindowsForms>true</UseWindowsForms>
+    <AssemblyName>ProcPilot</AssemblyName>
+    <RootNamespace>ProcPilot</RootNamespace>
+    <ApplicationManifest Condition="'$(SkipManifest)' != 'true'">app.manifest</ApplicationManifest>
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+    <Version>1.2.0</Version>
+    <!-- 仓库里的自测工程是独立项目，不能进主工程的默认 glob -->
+    <DefaultItemExcludes>$(DefaultItemExcludes);selftest\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- WinForms 隐式 using 与 WPF 类型冲突（Application/Brush/Timer/Button），移除后改用显式别名 -->
+    <Using Remove="System.Windows.Forms" />
+    <Using Remove="System.Drawing" />
+  </ItemGroup>
+
+</Project>
