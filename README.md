@@ -28,7 +28,7 @@
 
 ### 4. 托盘与关于
 - 关闭窗口 = 最小化到托盘；托盘菜单：显示主界面 / 设置 / 关于 / 退出。
-- **关于**页面：版本、构建时间、运行环境、权限、进程事件源、**代码签名状态**、配置目录，以及
+- **关于**页面：版本、构建时间、运行环境、权限、进程事件源、配置目录，以及
   「打开配置目录」「复制诊断信息」按钮。
 
 ### 5. UI
@@ -173,34 +173,7 @@ PID / 映像名 / 会话 ID / 工作组大小 / 内核+用户 CPU 时间 / 线�
 - `selftest` 工程：不依赖 GUI 就能验证 6 类关键行为（见第五节），其中 `ui` 模式会把设置窗口离屏渲染成 PNG，
   用来检查 XAML/绑定有没有运行时错误。
 
-### 2.11 打包、分发与 SmartScreen
-
-- **单文件自包含**：`PublishSingleFile + self-contained + win-x64`，对方机器不需要装 .NET。
-- **权限**：`requireAdministrator`（修改他人进程的优先级/挂起需要）。
-  代价是每次启动都会弹 UAC；UAC 里「发布者：未知」是**签名缺失**导致的，与 SmartScreen 是两个不同的提示。
-- **SmartScreen「Windows 已保护你的电脑 / 无法识别的应用」的真正成因**：
-  文件带 **Mark-of-the-Web**（`Zone.Identifier` 备用流）。浏览器下载、IM/邮件接收、
-  局域网共享复制、资源管理器解压 zip 都会打上这个标记；带标记且**没有 SmartScreen 信誉**的程序首次运行会被拦。
-  注意：加了 SmartScreen 信誉判定的是"文件/发布者信誉"，不是"有没有签名"——
-  **自签名证书与未签名在这一环表现一致**（微软官方文档明确说明）。
-- **不花钱、对任何机器都有效的做法**：
-  1. 分发**zip**，让对方解压后运行 `scripts\unblock-exe.ps1`（或右键文件 → 属性 → 勾选「解除锁定」）；
-     `build.ps1` 打包时也会自动对本机产物执行 `Unblock-File`；
-  2. 不要把 exe 通过会打标记的渠道直接传（要传就传 zip + 一句说明）。
-- **想要"别人下载后也不提示"**：需要**正式代码签名证书**，并且新文件首发仍可能被拦一次（信誉需积累）。
-  免费/低成本路径：
-  | 途径 | 费用 | 说明 |
-  |---|---|---|
-  | [SignPath Foundation](https://signpath.org/) | 免费 | 面向**开源项目**（OSI 许可 + 公开仓库），申请审核通过后由他们代签 |
-  | [Certum Open Source Code Signing](https://certum.eu/) | 约 €25/年 | 开源项目的低成本代码签名证书 |
-  | Azure Trusted Signing | 约 $10/月 | 个人需满足可验证的历史条件，企业更合适 |
-  | 商业 OV / EV 证书 | 上千元/年 | 通用，EV 也不再免 SmartScreen 首次拦截 |
-- **签名脚本**：`scripts\sign.ps1` 支持三种证书来源——`-Pfx`（PFX + 密码）、`-Thumbprint`（证书存储）、
-  `-SelfSigned`（仅本机测试）；`-NoTimestamp` 用于离线环境。`scripts\build.ps1 -Sign ...` 可在发布后直接签名。
-  自签名证书**只影响本机**（最多让 UAC 显示发布者名字），本项目**不会**自动往用户机器装根证书。
-- **许可**：MIT（允许商用，需保留版权与许可声明），见 `LICENSE`。
-
-### 2.12 隐私
+### 2.11 隐私
 
 - 程序**不联网、不上报任何数据**；ETW 只订阅本机内核进程事件，不采集命令行以外的内容，也不落盘。
 - 所有配置都在本机 `%APPDATA%\ProcPilot\`（`settings.json` / `rules.json` / 诊断日志），删目录即恢复出厂。
@@ -215,7 +188,7 @@ ProcPilot/
 ├─ App.xaml(.cs)            应用入口：单实例、主题、自启动参数、随机延迟
 ├─ MainWindow.xaml(.cs)     主界面：进程列表 / 状态按钮 / 记住 / 设置 / 关于 / 托盘
 ├─ SettingsWindow.xaml(.cs) 设置：规则管理、开机启动、后台采样、诊断
-├─ AboutWindow.xaml(.cs)    关于：版本、运行环境、签名状态、设计要点
+├─ AboutWindow.xaml(.cs)    关于：版本、运行环境、设计要点
 ├─ Models/                  ProcessInfo（UI 行）/ ProcessSnapshot（采样值）/ ProcessRule / AppSettings
 ├─ Services/
 │  ├─ SystemProcessSnapshot.cs   一次 NtQuerySystemInformation 采集全部进程
@@ -227,10 +200,10 @@ ProcPilot/
 │  ├─ ProcessController.cs       三态机（幂等）
 │  ├─ RuleStore.cs / SettingsStore.cs / JsonFile.cs / AppPaths.cs   持久化
 │  ├─ AutoStartManager.cs        开机自启
-│  ├─ AppInfo.cs                 版本、运行环境、签名状态
+│  ├─ AppInfo.cs                 版本、运行环境
 │  ├─ DiagLog.cs / ThemeManager.cs / IconProvider.cs / NativeMethods.cs
 ├─ Themes/                  浅色 / 深色配色与控件样式
-├─ scripts/                 build.ps1 / sign.ps1 / unblock-exe.ps1
+├─ scripts/                 build.ps1
 ├─ LICENSE                  MIT 许可（允许商用，需保留版权与许可声明）
 └─ selftest/                无 GUI 自测工程（snapshot/perf/rules/etw/etw2/ui/all）
 ```
@@ -245,14 +218,8 @@ ProcPilot/
 # 调试构建
 dotnet build -c Debug
 
-# 一键发布单文件（默认不签名，产物在 release\）
+# 一键发布单文件（产物在 release\）
 powershell -ExecutionPolicy Bypass -File scripts\build.ps1
-
-# 发布并用正式证书签名
-powershell -ExecutionPolicy Bypass -File scripts\build.ps1 -Sign -Pfx .\mycert.pfx -PfxPassword '***'
-
-# 只给已有 exe 补签名
-powershell -ExecutionPolicy Bypass -File scripts\sign.ps1 -Thumbprint <指纹>
 ```
 
 产物：`release\ProcPilot.exe`（单文件自包含）。
@@ -280,22 +247,18 @@ dotnet run --project selftest -- all        # 全部
 - **冻结类规则每次启动只挂起一次**（避免挂起计数累加导致解不开）。
 - **退出即恢复**：ProcPilot 正常退出时会把受控进程恢复到正常状态（安全优先）。
 - **ETW 需要管理员**：非管理员时自动降级为 2s 轮询，界面上会显示"事件源：轮询兜底"。
-- **SmartScreen**：未签名的公开分发会被动态拦一次；自签名证书对此无效，需正式证书 + 信誉积累（见 2.11）。
-- **UAC**：每次启动都弹（`requireAdministrator`）；「发布者：未知」需要签名证书才会变成发布者名称。
 
 ---
 
 ## 七、变更记录
 
 ### 1.2.0
-- 新增「关于」页面（版本 / 运行环境 / 权限 / 事件源 / 签名状态 / 设计要点 / 诊断信息复制）；
-- 打包与分发流程重做：`scripts/build.ps1`（发布，可选签名）、`scripts/sign.ps1`（正式证书 / 自签名）、
-  `scripts/unblock-exe.ps1`（解除网络来源标记），并在文档里讲清 SmartScreen 的成因与免费/付费证书路径；
-- 明确不往用户机器安装任何根证书（移除早期自签名信任引导）；
+- 新增「关于」页面（版本 / 运行环境 / 权限 / 事件源 / 设计要点 / 诊断信息复制）；
+- 明确不往用户机器安装任何根证书（移除早期的证书信任引导）；
 - 补 MIT 许可；README 重写为设计文档并清除本机路径/机器名；自测工程并入仓库。
 
 ### 1.1.0
-- 新增进程记忆（自动规则）、开机自启动 + 随机延迟、关于页面、自签名签名与信任引导；
+- 新增进程记忆（自动规则）、开机自启动 + 随机延迟、关于页面；
 - 采样改为单次系统调用；发现新进程改为 ETW 事件驱动；后台采样归零；
 - UI 虚拟化与刷新策略优化；诊断日志默认关闭并改为缓冲写；
 - 自测工程并入仓库（`selftest/`）。
